@@ -18,5 +18,7 @@ The web application retrieves data from [Blob Storage](https://azure.microsoft.c
 
 
 ### Requirements
+```bash
 flask
 azure-storage-blob
+```
