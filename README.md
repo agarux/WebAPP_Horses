@@ -14,8 +14,9 @@ Borzou Ghorbani
 
 ### Description 
 
-The web application retrieves data from [Blob Storage](https://azure.microsoft.com/es-es/products/storage/blobs) and shows data by selecting a specific day.
+APPLICATION: The web application retrieves data from [Blob Storage](https://azure.microsoft.com/es-es/products/storage/blobs) and shows data by selecting a specific day.
 
+DIAGRAM: .drawio file
 
 ### Requirements
 ```bash
