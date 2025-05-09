@@ -2,312 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIoT-CC25</title>
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></script>
+    <title>Horse Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/svg+xml" href="static/favicon.ico">
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
         }
-        #menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
+        .tabs {
+            margin: 20px 0;
+        }
+        .tab-button {
+            padding: 10px;
+            margin: 5px;
             background-color: #0d7b61;
-            padding-top: 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
-        #menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
-            background-color: #0d7b61;
-            padding-top: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .tab-button.active {
+            background-color: #126d56;
         }
-
-        .menu-footer {
-            margin-top: auto;
+        .tab-content {
+            display: none;
         }
-
-        #menu a {
-            padding: 15px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #ffffff;
+        .tab-content.active {
             display: block;
         }
-        #menu a:hover {
-            background-color: #4b9281;
+        canvas {
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
         }
-        .w3-main {
-            margin-left: 260px;
-            padding: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
         }
-        .param-card {
-            margin-top: 20px;
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
         }
-        .w3-button-custom {
-            margin: 10px;
+        th {
+            background-color: #0d7b61;
+            color: white;
         }
-        .warning {
-            color: #F1C40F;
-            font-weight: bold;
-        }
-        .normal {
-            color: black;
+        .date-selector {
+            margin-bottom: 20px;
         }
     </style>
 </head>
-<body class="w3-light-grey">
+<body>
+    <h2>Horse Monitoring Dashboard</h2>
 
-    <!-- Sidebar Menu -->
-    <div id="menu" class="w3-sidebar">
-        <a href="javascript:void(0)" onclick="showHorses()">Horses Data</a>
-        <a href="javascript:void(0)" onclick="showStable()">Stable Data</a>
-        <div class="menu-footer">
-            <p style="color: white; padding: 15px; font-size: 14px;">© 2025 MIoT GROUP 3</p>
-        </div>
+    <div class="date-selector">
+        <label for="dateInput">Selecciona a date:</label>
+        <input type="date" id="dateInput">
+        <button onclick="loadData()">Load data</button>
     </div>
-    
-    
 
-    <!-- Main Content -->
-    <div class="w3-main">
-        <!-- Header -->
-        <div class="w3-container w3-padding-32 w3-center" style="background-color:#0d7b61; color:white;">
-            <h2 id="title">System Monitor - Horses</h2>
-            <p id="currentDate" class="w3-center w3-margin-top"></p>
-        </div>
-
-        <!-- Dynamic Content -->
-        <div id="content">
-            <!-- Horse Tabs -->
-            <div id="horseTabs" class="w3-bar w3-border" style="display:none;">
-                <button class="w3-bar-item w3-button" onclick="showHorse(1)">Horse 1</button>
-                <button class="w3-bar-item w3-button" onclick="showHorse(2)">Horse 2</button>
-                <button class="w3-bar-item w3-button" onclick="showHorse(3)">Horse 3</button>
-            </div>
-
-            <!-- Horse Data Cards -->
-            <!-- Repeat this block for each horse -->
-            <div id="horse1" class="w3-container w3-padding-16" style="display:none;">
-                <h4><span id="horse1Label" class="normal">Horse 1</span></h4>
-                <div class="w3-row-padding">
-                    <!-- Heart Rate -->
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-heartbeat w3-text-red"></i> Heart Rate</h4>
-                            <p class="w3-xlarge" id="heartRate1">72 bpm</p>
-                        </div>
-                    </div>
-                    <!-- Temperature -->
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-thermometer-full w3-text-orange"></i> Temperature</h4>
-                            <p class="w3-xlarge" id="temperature1">37.5 °C</p>
-                        </div>
-                    </div>
-                    <!-- Oxygen -->
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-tint w3-text-blue"></i> Oxygen Level</h4>
-                            <p class="w3-xlarge" id="oxygen1">98 %</p>
-                        </div>
-                    </div>
-                    <!-- Status -->
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-bed w3-text-green"></i> Status</h4>
-                            <p class="w3-xlarge" id="state1">Standing</p>
-                        </div>
-                    </div>
-                    <!-- Location -->
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-home w3-text-brown"></i> Location</h4>
-                            <p class="w3-xlarge" id="location1">Inside Stable</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Horse 2 -->
-            <div id="horse2" class="w3-container w3-padding-16" style="display:none;">
-                <h4><span id="horse2Label" class="normal">Horse 2</span></h4>
-                <div class="w3-row-padding">
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-heartbeat w3-text-red"></i> Heart Rate</h4>
-                            <p class="w3-xlarge" id="heartRate2">80 bpm</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-thermometer-full w3-text-orange"></i> Temperature</h4>
-                            <p class="w3-xlarge" id="temperature2">37.3 °C</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-tint w3-text-blue"></i> Oxygen Saturation</h4>
-                            <p class="w3-xlarge" id="oxygen2">97 %</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-bed w3-text-green"></i> Status</h4>
-                            <p class="w3-xlarge" id="state2">Lying down</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-home w3-text-brown"></i> Location</h4>
-                            <p class="w3-xlarge" id="location2">Outside Stable</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Horse 3 -->
-            <div id="horse3" class="w3-container w3-padding-16" style="display:none;">
-                <h4><span id="horse3Label" class="normal">Horse 3</span></h4>
-                <div class="w3-row-padding">
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-heartbeat w3-text-red"></i> Heart Rate</h4>
-                            <p class="w3-xlarge" id="heartRate3">76 bpm</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-thermometer-full w3-text-orange"></i> Temperature</h4>
-                            <p class="w3-xlarge" id="temperature3">37.4 °C</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-tint w3-text-blue"></i> Oxygen Saturation</h4>
-                            <p class="w3-xlarge" id="oxygen3">99 %</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-bed w3-text-green"></i> Status</h4>
-                            <p class="w3-xlarge" id="state3">Standing</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-home w3-text-brown"></i> Location</h4>
-                            <p class="w3-xlarge" id="location3">Inside Stable</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stable Data -->
-            <div id="stable" class="w3-container w3-padding-16" style="display:none;">
-                <h4>Stable Data</h4>
-                <div class="w3-row-padding">
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-thermometer-full w3-text-orange"></i> Stable Temperature</h4>
-                            <p class="w3-xlarge">21.5 °C</p>
-                        </div>
-                    </div>
-                    <div class="w3-third">
-                        <div class="w3-card w3-white w3-padding param-card">
-                            <h4><i class="fa fa-tint w3-text-blue"></i> Humidity</h4>
-                            <p class="w3-xlarge">75 %</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Date Navigation -->
-            <div class="w3-container w3-center w3-margin-top">
-                <button class="w3-button w3-margin" style="background-color:#0d7b61; color:white;" onclick="navigateDay(-1)">Previous Day</button>
-                <button class="w3-button w3-margin" style="background-color:#0d7b61; color:white;" onclick="navigateDay(1)">Next Day</button>
-                <br>
-                <input type="date" class="w3-input w3-border w3-margin-top" id="inputDate" onchange="loadSpecificDay()">
-                <br>
-                <button class="w3-button w3-margin" style="background-color:#0d7b61; color:white;" onclick="loadSpecificDay()">Go to Specific Day</button>
-            </div>
-        </div>
-    </div>
+    <div class="tabs" id="horseTabs"></div>
+    <div id="horseContents"></div>
 
     <script>
-        let selectedDate = new Date();
+        const horseTabs = document.getElementById("horseTabs");
+        const horseContents = document.getElementById("horseContents");
 
-        function updateCurrentDate() {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById("currentDate").innerText = selectedDate.toLocaleDateString(undefined, options);
+        // Default day: TODAY
+        document.getElementById("dateInput").valueAsDate = new Date();
+
+        function formatDateISO(dateObj) {
+            return dateObj.toISOString().split("T")[0];
         }
 
-        function showHorses() {
-            document.getElementById("stable").style.display = "none";
-            document.getElementById("horseTabs").style.display = "block";
-            document.getElementById("title").innerText = "Parameter Monitor - Horses";
-            showHorse(1);
-            updateCurrentDate();
+        function loadData() {
+            const date = document.getElementById("dateInput").value;
+            if (!date) return;
+
+            fetch(`/all_data?timestamp=${date}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.length) {
+                        alert("No data available.");
+                        return;
+                    }
+
+                    horseTabs.innerHTML = "";
+                    horseContents.innerHTML = "";
+
+                    const horses = {};
+                    data.forEach(entry => {
+                        const id = entry.horse_id;
+                        if (!horses[id]) horses[id] = [];
+                        horses[id].push(entry);
+                    });
+
+                    Object.keys(horses).forEach((id, index) => {
+                        const button = document.createElement("button");
+                        button.className = "tab-button";
+                        button.innerText = `Horse ${id}`;
+                        button.onclick = () => showTab(id);
+                        horseTabs.appendChild(button);
+
+                        const div = document.createElement("div");
+                        div.className = "tab-content";
+                        div.id = `content-${id}`;
+
+                        const labels = horses[id].map(e => {
+                            const d = new Date(e.timestamp);
+                            return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}.${String(d.getMilliseconds()).padStart(3, '0')}`;
+                        });
+
+                        const temps = horses[id].map(e => e.temperature);
+                        const oxys = horses[id].map(e => e.oxymetry);
+                        const bpms = horses[id].map(e => e.bpm);
+
+                        div.innerHTML = `
+                            <h3>Horse ID ${id}</h3>
+                            <canvas id="tempChart-${id}" height="100"></canvas>
+                            <canvas id="oxyChart-${id}" height="100"></canvas>
+                            <canvas id="bpmChart-${id}" height="100"></canvas>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Status</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${horses[id].map(entry => `
+                                        <tr>
+                                            <td>${new Date(entry.timestamp).toTimeString().split(' ')[0]}.${new Date(entry.timestamp).getMilliseconds()}</td>
+                                            <td>${entry.status || ''}</td>
+                                            <td>${entry.location || ''}</td>
+                                        </tr>
+                                    `).join("")}
+                                </tbody>
+                            </table>
+                        `;
+
+                        horseContents.appendChild(div);
+
+                        createChart(`tempChart-${id}`, labels, temps, 'Temperature (°C)', 'rgb(255,99,132)');
+                        createChart(`oxyChart-${id}`, labels, oxys, 'Oximetry (%)', 'rgb(54,162,235)');
+                        createChart(`bpmChart-${id}`, labels, bpms, 'BPM', 'rgb(75,192,192)');
+
+                        if (index === 0) showTab(id);
+                    });
+                })
+                .catch(err => {
+                    console.error("Error cargando datos:", err);
+                });
         }
 
-        function showHorse(id) {
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById("horse" + i).style.display = "none";
-                document.getElementById("horse" + i + "Label").classList.remove("warning");
-                document.getElementById("horse" + i + "Label").classList.add("normal");
-            }
-            document.getElementById("horse" + id).style.display = "block";
-            document.getElementById("horse" + id + "Label").classList.add("warning");
+        function showTab(id) {
+            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
+
+            document.querySelector(`.tab-button:nth-child(${Object.keys(document.querySelectorAll('.tab-button')).indexOf(id) + 1})`)?.classList.add("active");
+            document.getElementById(`content-${id}`)?.classList.add("active");
         }
 
-        function showStable() {
-            document.getElementById("horseTabs").style.display = "none";
-            document.getElementById("title").innerText = "Parameter Monitor - Stable";
-            document.getElementById("stable").style.display = "block";
-
-            // Ocultar los caballos
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById("horse" + i).style.display = "none";
-                document.getElementById("horse" + i + "Label").classList.remove("warning");
-                document.getElementById("horse" + i + "Label").classList.add("normal");
-            }
-
-            updateCurrentDate();
+        function createChart(canvasId, labels, data, label, color) {
+            new Chart(document.getElementById(canvasId), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time (hh:mm:ss.ms)' }
+                        },
+                        y: {
+                            title: { display: true, text: label },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         }
-
-        function navigateDay(dayOffset) {
-            selectedDate.setDate(selectedDate.getDate() + dayOffset);
-            updateCurrentDate();
-            alert("Navigate to: " + selectedDate.toDateString());
-        }
-
-        function loadSpecificDay() {
-            let dateInput = document.getElementById("inputDate").value;
-            if (dateInput) {
-                selectedDate = new Date(dateInput);
-                updateCurrentDate();
-                alert("Load data for: " + selectedDate.toDateString());
-            } else {
-                alert("Please select a date.");
-            }
-        }
-
-        // Mostrar sección de caballos al cargar
-        showHorses();
+        loadData();
     </script>
 </body>
 </html>
