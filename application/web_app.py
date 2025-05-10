@@ -16,38 +16,52 @@ def index():
 
 @app.route('/list_blobs')
 def list_blobs():
-    "Lista todos los blobs disponibles en el contenedor para ver si existen los de la fecha solicitada."
-    blobs = list(container_client.list_blobs(name_starts_with="iot-hub-horses/"))
-    blob_names = [blob.name for blob in blobs]
-    return jsonify(blob_names)
+    ts = request.args.get("timestamp")  # Ej: 2025-05-09
+    if not ts:
+        return jsonify({"error": "Falta timestamp"}), 400
+
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%d")
+        prefix = f"{dt.year:04d}/{dt.month:02d}/{dt.day:02d}"
+    except:
+        return jsonify({"error": "Formato de fecha inválido"}), 400
+
+    partitions = ["caballo", "establo"]
+    full_prefixes = [f"iot-hub-horses/{p}/{prefix}" for p in partitions]
+
+    blobs = []
+    for p in full_prefixes:
+        blobs += list(container_client.list_blobs(name_starts_with=p))
+
+    return jsonify([b.name for b in blobs])
+
 
 @app.route('/all_data')
 def all_data():
     all_messages = []
 
     ts = request.args.get("timestamp")  # format: 2025-05-09
-    target_path = None
+    if not ts:
+        return jsonify({"error": "Missing timestamp"}), 400
 
-    if ts:
-        try:
-            dt = datetime.strptime(ts, "%Y-%m-%d")
-            path_pattern_1 = f"iot-hub-horses/00/{dt.year}/{dt.month:02d}/{dt.day:02d}/"
-            path_pattern_2 = f"iot-hub-horses/00/{dt.year}/{dt.month:02d}/{dt.day:02d}-1/"
-            target_path = (path_pattern_1, path_pattern_2)  # Permitimos ambas rutas
-        except Exception as e:
-            return jsonify({"error": "Invalid timestamp format"}), 400
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%d")
+        date_prefix = f"{dt.year}/{dt.month:02d}/{dt.day:02d}/"
+    except Exception as e:
+        return jsonify({"error": "Invalid timestamp format"}), 400
+
+    print(f"Buscando blobs para la fecha: {date_prefix}")
 
     blobs = list(container_client.list_blobs(name_starts_with="iot-hub-horses/"))
-    blobs = sorted(blobs, key=lambda b: b.name)
-
     for blob in blobs:
         if not blob.name.endswith(".json"):
             continue
 
-        # Comprobamos si el blob coincide con alguna de las rutas de búsqueda
-        if target_path and not (blob.name.startswith(target_path[0]) or blob.name.startswith(target_path[1])):
+        # Asegúrate de que contiene la fecha solicitada
+        if date_prefix not in blob.name:
             continue
 
+        print(f"Procesando blob: {blob.name}")
         blob_client = container_client.get_blob_client(blob.name)
         try:
             blob_bytes = blob_client.download_blob().readall()
@@ -69,14 +83,12 @@ def all_data():
                     })
 
                 except Exception as e:
+                    print(f"Error decoding message: {e}")
                     continue
 
         except Exception as e:
+            print(f"Error leyendo blob {blob.name}: {e}")
             continue
-
-        # Si encontramos el blob exacto, stop la búsqueda
-        if target_path:
-            break
 
     return jsonify(all_messages)
 

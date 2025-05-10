@@ -1,201 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Horse Monitoring Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/svg+xml" href="static/favicon.ico">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .tabs {
-            margin: 20px 0;
-        }
-        .tab-button {
-            padding: 10px;
-            margin: 5px;
-            background-color: #0d7b61;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .tab-button.active {
-            background-color: #126d56;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        canvas {
-            margin-bottom: 30px;
-            background-color: white;
-            padding: 10px;
-            border: 1px solid #ccc;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-        th, td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #0d7b61;
-            color: white;
-        }
-        .date-selector {
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>HorseConnect</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" type="image/svg+xml" href="static/favicon.ico" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #0d7b61;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0;
+      position: fixed;
+      height: 100vh;
+    }
+
+    .sidebar img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    .sidebar nav {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .sidebar button {
+      background: none;
+      border: none;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .sidebar button:hover,
+    .sidebar button.active {
+      background-color: #189273;
+    }
+
+    .sidebar footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .main {
+      margin-left: 240px;
+      flex-grow: 1;
+      padding: 20px;
+    }
+
+    .tabs {
+      margin: 20px 0;
+    }
+
+    .tab-button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #0d7b61;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background-color: #189273;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    canvas {
+      margin-bottom: 30px;
+      background-color: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #0d7b61;
+      color: white;
+    }
+
+    .date-selector {
+      margin-bottom: 20px;
+    }
+
+    .date-selector button {
+        background-color: #0d7b61; /* Set the background color */
+        color: white; /* Set the text color */
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+        border-radius: 25px;
+    }
+
+    .date-selector button:hover {
+        background-color: #189273; /* Darker shade when hovered */
+    }
+
+    .nav-buttons {
+        margin: 20px 0;
+    }
+
+    .nav-buttons button {
+        background-color: #0d7b61; /* Set the background color */
+        color: white; /* Set the text color */
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+        border-radius: 25px;
+    }
+
+    .nav-buttons button:hover {
+        background-color: #189273; /* Darker shade when hovered */
+    }
+  </style>
 </head>
 <body>
-    <h2>Horse Monitoring Dashboard</h2>
+  <div class="sidebar">
+    <div>
+      <img src="static/logo.png" alt="Logo" />
+      <nav>
+        <button id="btnHorses" class="active" onclick="switchSection('horses')">Horses</button>
+        <button id="btnStable" onclick="switchSection('stable')">Stable</button>
+      </nav>
+    </div>
+    <footer>&copy; 2025 MIoT GROUP 03</footer>
+  </div>
+
+  <div class="main">
+    <h2 id="sectionTitle">Horse Monitoring Dashboard</h2>
 
     <div class="date-selector">
-        <label for="dateInput">Selecciona a date:</label>
-        <input type="date" id="dateInput">
-        <button onclick="loadData()">Load data</button>
+      <label for="dateInput">Select a date:</label>
+      <input type="date" id="dateInput" />
+      <button onclick="loadData()">Load Data</button>
+    </div>
+
+    <div class="nav-buttons">
+      <button onclick="changeDate(-1)">Previous Day</button>
+      <button onclick="changeDate(1)">Next Day</button>
     </div>
 
     <div class="tabs" id="horseTabs"></div>
     <div id="horseContents"></div>
+  </div>
 
-    <script>
-        const horseTabs = document.getElementById("horseTabs");
-        const horseContents = document.getElementById("horseContents");
+  <script>
+    let currentSection = "horses";
+    const horseTabs = document.getElementById("horseTabs");
+    const horseContents = document.getElementById("horseContents");
 
-        // Default day: TODAY
-        document.getElementById("dateInput").valueAsDate = new Date();
+    document.getElementById("dateInput").valueAsDate = new Date();
 
-        function formatDateISO(dateObj) {
-            return dateObj.toISOString().split("T")[0];
-        }
+    function switchSection(section) {
+      currentSection = section;
 
-        function loadData() {
-            const date = document.getElementById("dateInput").value;
-            if (!date) return;
+      document.getElementById("btnHorses").classList.remove("active");
+      document.getElementById("btnStable").classList.remove("active");
+      document.getElementById(`btn${capitalize(section)}`).classList.add("active");
 
-            fetch(`/all_data?timestamp=${date}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.length) {
-                        alert("No data available.");
-                        return;
-                    }
+      document.getElementById("sectionTitle").innerText =
+        section === "horses" ? "Horse Monitoring Dashboard" : "Stable - Temperature and Humidity";
 
-                    horseTabs.innerHTML = "";
-                    horseContents.innerHTML = "";
+      loadData();
+    }
 
-                    const horses = {};
-                    data.forEach(entry => {
-                        const id = entry.horse_id;
-                        if (!horses[id]) horses[id] = [];
-                        horses[id].push(entry);
-                    });
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
 
-                    Object.keys(horses).forEach((id, index) => {
-                        const button = document.createElement("button");
-                        button.className = "tab-button";
-                        button.innerText = `Horse ${id}`;
-                        button.onclick = () => showTab(id);
-                        horseTabs.appendChild(button);
+    function formatDateISO(dateObj) {
+      return dateObj.toISOString().split("T")[0];
+    }
 
-                        const div = document.createElement("div");
-                        div.className = "tab-content";
-                        div.id = `content-${id}`;
+    function loadData() {
+      const date = document.getElementById("dateInput").value;
+      if (!date) return;
 
-                        const labels = horses[id].map(e => {
-                            const d = new Date(e.timestamp);
-                            return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}.${String(d.getMilliseconds()).padStart(3, '0')}`;
-                        });
+      fetch(`/all_data?timestamp=${date}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.length) {
+            alert("No data available.");
+            return;
+          }
 
-                        const temps = horses[id].map(e => e.temperature);
-                        const oxys = horses[id].map(e => e.oxymetry);
-                        const bpms = horses[id].map(e => e.bpm);
+          console.log("DATA RECEIVED:", data);
 
-                        div.innerHTML = `
-                            <h3>Horse ID ${id}</h3>
-                            <canvas id="tempChart-${id}" height="100"></canvas>
-                            <canvas id="oxyChart-${id}" height="100"></canvas>
-                            <canvas id="bpmChart-${id}" height="100"></canvas>
+          const horses = {};
+          const stables = [];
 
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>Status</th>
-                                        <th>Location</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${horses[id].map(entry => `
-                                        <tr>
-                                            <td>${new Date(entry.timestamp).toTimeString().split(' ')[0]}.${new Date(entry.timestamp).getMilliseconds()}</td>
-                                            <td>${entry.status || ''}</td>
-                                            <td>${entry.location || ''}</td>
-                                        </tr>
-                                    `).join("")}
-                                </tbody>
-                            </table>
-                        `;
+          data.forEach(entry => {
+            if (entry.horse_id) {
+              const id = entry.horse_id;
+              if (!horses[id]) horses[id] = [];
+              horses[id].push(entry);
+            } else if (entry.source === "stable") {
+              stables.push(entry);
+            }
+          });
 
-                        horseContents.appendChild(div);
+          if (currentSection === "horses") {
+            renderHorses(horses);
+          } else {
+            renderStable(stables);
+          }
+        })
+        .catch(err => {
+          console.error("Error loading data:", err);
+        });
+    }
 
-                        createChart(`tempChart-${id}`, labels, temps, 'Temperature (°C)', 'rgb(255,99,132)');
-                        createChart(`oxyChart-${id}`, labels, oxys, 'Oximetry (%)', 'rgb(54,162,235)');
-                        createChart(`bpmChart-${id}`, labels, bpms, 'BPM', 'rgb(75,192,192)');
+    function renderHorses(horses) {
+      horseTabs.innerHTML = "";
+      horseContents.innerHTML = "";
 
-                        if (index === 0) showTab(id);
-                    });
+      Object.keys(horses).forEach((id, index) => {
+        const button = document.createElement("button");
+        button.className = "tab-button";
+        button.innerText = `Horse ${id}`;
+        button.onclick = () => showTab(id);
+        horseTabs.appendChild(button);
+
+        const div = document.createElement("div");
+        div.className = "tab-content";
+        div.id = `content-${id}`;
+
+        const labels = horses[id].map(e => {
+          const d = new Date(e.timestamp);
+          return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(d.getMilliseconds()).padStart(3, "0")}`;
+        });
+
+        const temps = horses[id].map(e => e.temperature);
+        const oxys = horses[id].map(e => e.oxymetry);
+        const bpms = horses[id].map(e => e.bpm);
+
+        div.innerHTML = `
+          <h3>Horse ID ${id}</h3>
+          <canvas id="tempChart-${id}" height="100"></canvas>
+          <canvas id="oxyChart-${id}" height="100"></canvas>
+          <canvas id="bpmChart-${id}" height="100"></canvas>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Status</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${horses[id]
+                .map(entry => {
+                  const t = new Date(entry.timestamp);
+                  return `<tr>
+                    <td>${t.toTimeString().split(" ")[0]}.${t.getMilliseconds()}</td>
+                    <td>${entry.status || ""}</td>
+                    <td>${entry.location || ""}</td>
+                  </tr>`;
                 })
-                .catch(err => {
-                    console.error("Error cargando datos:", err);
-                });
-        }
+                .join("")}
+            </tbody>
+          </table>
+        `;
 
-        function showTab(id) {
-            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
+        horseContents.appendChild(div);
 
-            document.querySelector(`.tab-button:nth-child(${Object.keys(document.querySelectorAll('.tab-button')).indexOf(id) + 1})`)?.classList.add("active");
-            document.getElementById(`content-${id}`)?.classList.add("active");
-        }
+        createChart(`tempChart-${id}`, labels, temps, "Temperature (°C)", "rgb(255,0,0)");
+        createChart(`oxyChart-${id}`, labels, oxys, "Oxygenation (%)", "rgb(0,0,235)");
+        createChart(`bpmChart-${id}`, labels, bpms, "BPM", "rgb(0,255,0)");
 
-        function createChart(canvasId, labels, data, label, color) {
-            new Chart(document.getElementById(canvasId), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: color,
-                        fill: false,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Time (hh:mm:ss.ms)' }
-                        },
-                        y: {
-                            title: { display: true, text: label },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-        loadData();
-    </script>
+        if (index === 0) showTab(id);
+      });
+    }
+
+    function renderStable(data) {
+      horseTabs.innerHTML = "";
+      horseContents.innerHTML = "";
+
+      const container = document.createElement("div");
+      container.className = "tab-content active";
+
+      const labels = data.map(e => {
+        const d = new Date(e.timestamp);
+        return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+      });
+
+      const temps = data.map(e => e.temperature || 0);
+      const hums = data.map(e => e.humidity || 0);
+
+      container.innerHTML = `
+        <h3>Stable - Temperature and Humidity</h3>
+        <canvas id="stableTempChart" height="100"></canvas>
+        <canvas id="stableHumidityChart" height="100"></canvas>
+      `;
+
+      horseContents.appendChild(container);
+
+      createChart("stableTempChart", labels, temps, "Temperature (°C)", "rgb(255,0,0)");
+      createChart("stableHumidityChart", labels, hums, "Humidity (%)", "rgb(0,0,255)");
+    }
+
+    function showTab(id) {
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
+
+      document.querySelector(`.tab-button:nth-child(${Object.keys(document.querySelectorAll('.tab-button')).indexOf(id) + 1})`)?.classList.add("active");
+      document.getElementById(`content-${id}`)?.classList.add("active");
+    }
+
+    function createChart(canvasId, labels, data, label, color) {
+      new Chart(document.getElementById(canvasId), {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: label,
+              data: data,
+              borderColor: color,
+              fill: false,
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: { display: true, text: "Time (hh:mm:ss)" },
+            },
+            y: {
+              title: { display: true, text: label },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    }
+
+    function changeDate(dayOffset) {
+      const currentDate = new Date(document.getElementById("dateInput").value);
+      currentDate.setDate(currentDate.getDate() + dayOffset);
+      document.getElementById("dateInput").value = formatDateISO(currentDate);
+      loadData();
+    }
+
+    loadData();
+  </script>
 </body>
 </html>
