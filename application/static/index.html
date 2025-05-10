@@ -6,6 +6,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" type="image/svg+xml" href="static/favicon.ico" />
   <style>
+    /* 🎨 Misma hoja de estilos que ya tenías (sin cambios importantes) */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -120,8 +121,8 @@
     }
 
     .date-selector button {
-        background-color: #0d7b61; /* Set the background color */
-        color: white; /* Set the text color */
+        background-color: #0d7b61;
+        color: white;
         padding: 10px 20px;
         border: none;
         cursor: pointer;
@@ -131,7 +132,7 @@
     }
 
     .date-selector button:hover {
-        background-color: #189273; /* Darker shade when hovered */
+        background-color: #189273;
     }
 
     .nav-buttons {
@@ -139,8 +140,8 @@
     }
 
     .nav-buttons button {
-        background-color: #0d7b61; /* Set the background color */
-        color: white; /* Set the text color */
+        background-color: #0d7b61;
+        color: white;
         padding: 10px 20px;
         border: none;
         cursor: pointer;
@@ -150,7 +151,7 @@
     }
 
     .nav-buttons button:hover {
-        background-color: #189273; /* Darker shade when hovered */
+        background-color: #189273;
     }
   </style>
 </head>
@@ -224,8 +225,6 @@
             return;
           }
 
-          console.log("DATA RECEIVED:", data);
-
           const horses = {};
           const stables = [];
 
@@ -234,7 +233,7 @@
               const id = entry.horse_id;
               if (!horses[id]) horses[id] = [];
               horses[id].push(entry);
-            } else if (entry.source === "stable") {
+            } else if (entry.device === "stable") {
               stables.push(entry);
             }
           });
@@ -344,8 +343,10 @@
       document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
 
-      document.querySelector(`.tab-button:nth-child(${Object.keys(document.querySelectorAll('.tab-button')).indexOf(id) + 1})`)?.classList.add("active");
       document.getElementById(`content-${id}`)?.classList.add("active");
+      const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+      const index = Object.keys(tabButtons).indexOf(id);
+      if (tabButtons[index]) tabButtons[index].classList.add("active");
     }
 
     function createChart(canvasId, labels, data, label, color) {

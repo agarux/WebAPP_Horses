@@ -1,149 +1,94 @@
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, request, jsonify, send_from_directory
 from azure.storage.blob import BlobServiceClient
-import json
 import base64
-from datetime import datetime, timedelta
+import json
+from datetime import datetime
+import os
 
 app = Flask(__name__)
 
-connection_string = "DefaultEndpointsProtocol=https;AccountName=storagehorses;AccountKey=h4eBr4ZWS4UZuzvBiQKgcgNYsNFTAtR6IxLRKi2bldCfgen3pxrYUJ4zL6AyYTzvSINoCsPJ6dTq+ASt8QpPSw==;EndpointSuffix=core.windows.net"
+# Configuración de Azure
+connection_string = "DefaultEndpointsProtocol=https;AccountName=storagepocfp;AccountKey=knMauwPkBOLyM3VGxQE7RS8j7KJFOLyHahtQOApA0JMRT1JNUH5heBtV+C61oalS3x3MFCAnk/tT+ASt8s+oiw==;EndpointSuffix=core.windows.net"
+container_name = "mycontainerfp"
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-container_client = blob_service_client.get_container_client("horse-container")
-
-@app.route('/')
-def index():
-    return send_from_directory('static', 'index.html')
-
-@app.route('/list_blobs')
-def list_blobs():
-    ts = request.args.get("timestamp")  # Ej: 2025-05-09
-    if not ts:
-        return jsonify({"error": "Falta timestamp"}), 400
-
-    try:
-        dt = datetime.strptime(ts, "%Y-%m-%d")
-        prefix = f"{dt.year:04d}/{dt.month:02d}/{dt.day:02d}"
-    except:
-        return jsonify({"error": "Formato de fecha inválido"}), 400
-
-    partitions = ["caballo", "establo"]
-    full_prefixes = [f"iot-hub-horses/{p}/{prefix}" for p in partitions]
-
-    blobs = []
-    for p in full_prefixes:
-        blobs += list(container_client.list_blobs(name_starts_with=p))
-
-    return jsonify([b.name for b in blobs])
-
+container_client = blob_service_client.get_container_client(container_name)
 
 @app.route('/all_data')
-def all_data():
-    all_messages = []
-
-    ts = request.args.get("timestamp")  # format: 2025-05-09
-    if not ts:
-        return jsonify({"error": "Missing timestamp"}), 400
+def get_all_data():
+    date_str = request.args.get("timestamp")
+    print(f"[INFO] Recibida fecha: {date_str}")
+    if not date_str:
+        print("[WARN] No se proporcionó timestamp.")
+        return jsonify([])
 
     try:
-        dt = datetime.strptime(ts, "%Y-%m-%d")
-        date_prefix = f"{dt.year}/{dt.month:02d}/{dt.day:02d}/"
-    except Exception as e:
-        return jsonify({"error": "Invalid timestamp format"}), 400
+        year, month, day = date_str.split("-")
+    except ValueError:
+        print("[ERROR] Formato de fecha incorrecto.")
+        return jsonify([])
 
-    print(f"Buscando blobs para la fecha: {date_prefix}")
+    prefix = f"IoTHubFP/00/{year}/{month}/{day}/"
+    print(f"[INFO] Buscando blobs con prefijo: {prefix}")
+    blobs = container_client.list_blobs(name_starts_with=prefix)
 
-    blobs = list(container_client.list_blobs(name_starts_with="iot-hub-horses/"))
-    for blob in blobs:
-        if not blob.name.endswith(".json"):
-            continue
-
-        # Asegúrate de que contiene la fecha solicitada
-        if date_prefix not in blob.name:
-            continue
-
-        print(f"Procesando blob: {blob.name}")
-        blob_client = container_client.get_blob_client(blob.name)
-        try:
-            blob_bytes = blob_client.download_blob().readall()
-            lines = blob_bytes.splitlines()
-
-            for line in lines:
-                try:
-                    outer_json = json.loads(line)
-                    body_b64 = outer_json.get("Body")
-                    if not body_b64:
-                        continue
-
-                    decoded_str = base64.b64decode(body_b64).decode("utf-8")
-                    body_json = json.loads(decoded_str)
-
-                    all_messages.append({
-                        "timestamp": outer_json.get("EnqueuedTimeUtc", "N/A"),
-                        **body_json
-                    })
-
-                except Exception as e:
-                    print(f"Error decoding message: {e}")
-                    continue
-
-        except Exception as e:
-            print(f"Error leyendo blob {blob.name}: {e}")
-            continue
-
-    return jsonify(all_messages)
-
-
-@app.route('/get_horse_data/<int:horse_id>', methods=['GET'])
-def get_horse_data(horse_id):
-    blobs = list(container_client.list_blobs(name_starts_with="iot-hub-horses/"))
-    blobs = sorted(blobs, key=lambda b: b.name, reverse=True)
-
-    print(f"Total blobs encontrados: {len(blobs)}")
+    all_data = []
 
     for blob in blobs:
-        if not blob.name.endswith(".json"):
-            continue
-
-        print(f"Procesando blob: {blob.name}")
+        print(f"[INFO] Procesando blob: {blob.name}")
         blob_client = container_client.get_blob_client(blob.name)
+        blob_data = blob_client.download_blob().readall().decode("utf-8")
 
-        try:
-            blob_bytes = blob_client.download_blob().readall()
-            lines = blob_bytes.splitlines()
+        for line in blob_data.strip().splitlines():
+            try:
+                record = json.loads(line)
+            except Exception as e:
+                print(f"[ERROR] Línea no válida en {blob.name}: {e}")
+                continue
 
-            for line in lines:
-                try:
-                    outer_json = json.loads(line)
-                    body_b64 = outer_json.get("Body")
-                    if not body_b64:
-                        continue
+            system_props = record.get("SystemProperties", {})
+            timestamp = system_props.get("enqueuedTime")
 
-                    decoded_str = base64.b64decode(body_b64).decode("utf-8")
-                    body_json = json.loads(decoded_str)
+            body_base64 = record.get("Body")
+            if not body_base64:
+                print("[WARN] Registro sin 'Body'")
+                continue
 
-                    print(f"Mensaje decodificado: {body_json}")
+            try:
+                body_json = json.loads(base64.b64decode(body_base64).decode("utf-8"))
+            except Exception as e:
+                print(f"[ERROR] Fallo al decodificar body base64: {e}")
+                continue
 
-                    if body_json.get("horse_id") != horse_id:
-                        print(f"Ignorando: horse_id={body_json.get('horse_id')} no coincide con solicitado={horse_id}")
-                        continue
+            device_id = system_props.get("connectionDeviceId", "").lower()
+            print(f"[INFO] Dispositivo detectado: {device_id}")
 
-                    return jsonify({
-                        "bpm": body_json.get("bpm", 0),
-                        "temperature": round(body_json.get("temperature", 0), 1),
-                        "oxymetry": round(body_json.get("oxymetry", 0), 1),
-                        "status": body_json.get("status", "Unknown"),
-                        "location": body_json.get("location", "Unknown")
-                    })
+            if "horse" in device_id:
+                body_json["horse_id"] = device_id.replace("horse-", "").strip()
+            elif "stable" in device_id:
+                body_json["device"] = "stable"
+            else:
+                print(f"[WARN] Dispositivo desconocido: {device_id}")
+                continue
 
-                except Exception as e:
-                    print(f"Error procesando línea JSON: {e}")
-                    continue
+            body_json["timestamp"] = timestamp
+            all_data.append(body_json)
 
-        except Exception as e:
-            print(f"Error leyendo blob {blob.name}: {e}")
-            continue
+    print(f"[INFO] Registros totales procesados: {len(all_data)}")
+    return jsonify(all_data)
 
-    return jsonify({"error": f"No data found for horse {horse_id}"}), 404
+
+# Ruta para archivos estáticos (favicon, logo, etc.)
+@app.route('/static/<path:path>')
+def send_static(path):
+    print(f"[INFO] Solicitando archivo estático: {path}")
+    return send_from_directory('static', path)
+
+# Servir index.html
+@app.route('/')
+def index():
+    print("[INFO] Solicitando index.html")
+    return send_from_directory('static', 'index.html')
 
 if __name__ == '__main__':
+    print("[INFO] Servidor Flask arrancando en http://0.0.0.0:8080")
     app.run(debug=True, host='0.0.0.0', port=8080)
