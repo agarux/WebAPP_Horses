@@ -5,8 +5,9 @@
   <title>HorseConnect</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" type="image/svg+xml" href="static/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
   <style>
-    /* 🎨 Misma hoja de estilos que ya tenías (sin cambios importantes) */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -22,16 +23,14 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 0;
       position: fixed;
       height: 100vh;
     }
 
     .sidebar img {
-      width: 100%;
-      height: auto;
+      max-height: 100px;
+      margin: 20px auto;
       display: block;
-      margin-bottom: 20px;
     }
 
     .sidebar nav {
@@ -66,6 +65,7 @@
       margin-left: 240px;
       flex-grow: 1;
       padding: 20px;
+      overflow-y: auto;
     }
 
     .tabs {
@@ -93,10 +93,21 @@
       display: block;
     }
 
-    canvas {
-      margin-bottom: 30px;
-      background-color: white;
-      padding: 10px;
+    .scroll-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+    }
+
+    .scroll-wrapper canvas {
+      width: 1200px;
+      height: 300px;
+    }
+
+    .table-wrapper {
+      max-height: 300px;
+      overflow-y: auto;
+      background: white;
       border: 1px solid #ccc;
     }
 
@@ -121,37 +132,47 @@
     }
 
     .date-selector button {
-        background-color: #0d7b61;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background-color 0.3s;
-        border-radius: 25px;
+      background-color: #0d7b61;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 25px;
     }
 
     .date-selector button:hover {
-        background-color: #189273;
+      background-color: #189273;
     }
 
     .nav-buttons {
-        margin: 20px 0;
+      margin: 20px 0;
     }
 
     .nav-buttons button {
-        background-color: #0d7b61;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background-color 0.3s;
-        border-radius: 25px;
+      background-color: #0d7b61;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 25px;
     }
 
     .nav-buttons button:hover {
-        background-color: #189273;
+      background-color: #189273;
+    }
+
+    .scroll-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      width: 100%;
+      padding-bottom: 20px; 
+    }
+
+    canvas {
+      width: 100% !important;  
+      height: 300px;
     }
   </style>
 </head>
@@ -194,13 +215,12 @@
 
     function switchSection(section) {
       currentSection = section;
-
       document.getElementById("btnHorses").classList.remove("active");
       document.getElementById("btnStable").classList.remove("active");
       document.getElementById(`btn${capitalize(section)}`).classList.add("active");
 
       document.getElementById("sectionTitle").innerText =
-        section === "horses" ? "Horse Monitoring Dashboard" : "Stable - Temperature and Humidity";
+        section === "horses" ? "Horse Monitoring Dashboard" : "Stable - Environmental parameters";
 
       loadData();
     }
@@ -264,42 +284,27 @@
         div.className = "tab-content";
         div.id = `content-${id}`;
 
-        const labels = horses[id].map(e => {
+        const labels = horses[id].map(e => {  
           const d = new Date(e.timestamp);
           return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(d.getMilliseconds()).padStart(3, "0")}`;
         });
 
         const temps = horses[id].map(e => e.temperature);
         const oxys = horses[id].map(e => e.oxymetry);
-        const bpms = horses[id].map(e => e.bpm);
+        const bpms = horses[id].map(e => e.bpm || e.heartRate);
+        const accX = horses[id].map(e => e.accelerationX || 0);
+        const accY = horses[id].map(e => e.accelerationY || 0);
+        const accZ = horses[id].map(e => e.accelerationZ || 0);
 
         div.innerHTML = `
           <h3>Horse ID ${id}</h3>
-          <canvas id="tempChart-${id}" height="100"></canvas>
-          <canvas id="oxyChart-${id}" height="100"></canvas>
-          <canvas id="bpmChart-${id}" height="100"></canvas>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Status</th>
-                <th>Location</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${horses[id]
-                .map(entry => {
-                  const t = new Date(entry.timestamp);
-                  return `<tr>
-                    <td>${t.toTimeString().split(" ")[0]}.${t.getMilliseconds()}</td>
-                    <td>${entry.status || ""}</td>
-                    <td>${entry.location || ""}</td>
-                  </tr>`;
-                })
-                .join("")}
-            </tbody>
-          </table>
+          <div class="scroll-wrapper"><canvas id="tempChart-${id}" height="100"></canvas></div>
+          <div class="scroll-wrapper"><canvas id="oxyChart-${id}" height="100"></canvas></div>
+          <div class="scroll-wrapper"><canvas id="bpmChart-${id}" height="100"></canvas></div>
+          <div class="scroll-wrapper"><canvas id="accXChart-${id}" height="100"></canvas></div>
+          <div class="scroll-wrapper"><canvas id="accYChart-${id}" height="100"></canvas></div>
+          <div class="scroll-wrapper"><canvas id="accZChart-${id}" height="100"></canvas></div>
         `;
 
         horseContents.appendChild(div);
@@ -307,6 +312,9 @@
         createChart(`tempChart-${id}`, labels, temps, "Temperature (°C)", "rgb(255,0,0)");
         createChart(`oxyChart-${id}`, labels, oxys, "Oxygenation (%)", "rgb(0,0,235)");
         createChart(`bpmChart-${id}`, labels, bpms, "BPM", "rgb(0,255,0)");
+        createChart(`accXChart-${id}`, labels, accX, "Acceleration X (g)", "rgb(255,128,0)");
+        createChart(`accYChart-${id}`, labels, accY, "Acceleration Y (g)", "rgb(0,128,255)");
+        createChart(`accZChart-${id}`, labels, accZ, "Acceleration Z (g)", "rgb(128,0,255)");
 
         if (index === 0) showTab(id);
       });
@@ -319,34 +327,27 @@
       const container = document.createElement("div");
       container.className = "tab-content active";
 
-      const labels = data.map(e => {
+      const labels = data.map(e => {  
         const d = new Date(e.timestamp);
         return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
       });
 
       const temps = data.map(e => e.temperature || 0);
       const hums = data.map(e => e.humidity || 0);
+      const pressures = data.map(e => e.pressure || 0);
 
       container.innerHTML = `
-        <h3>Stable - Temperature and Humidity</h3>
-        <canvas id="stableTempChart" height="100"></canvas>
-        <canvas id="stableHumidityChart" height="100"></canvas>
+        <h3>Stable - Temperature, Humidity, and Pressure</h3>
+        <div class="scroll-wrapper"><canvas id="stableTempChart" height="100"></canvas></div>
+        <div class="scroll-wrapper"><canvas id="stableHumidityChart" height="100"></canvas></div>
+        <div class="scroll-wrapper"><canvas id="stablePressureChart" height="100"></canvas></div>
       `;
 
       horseContents.appendChild(container);
 
       createChart("stableTempChart", labels, temps, "Temperature (°C)", "rgb(255,0,0)");
       createChart("stableHumidityChart", labels, hums, "Humidity (%)", "rgb(0,0,255)");
-    }
-
-    function showTab(id) {
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
-
-      document.getElementById(`content-${id}`)?.classList.add("active");
-      const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
-      const index = Object.keys(tabButtons).indexOf(id);
-      if (tabButtons[index]) tabButtons[index].classList.add("active");
+      createChart("stablePressureChart", labels, pressures, "Pressure (hPa)", "rgb(0,128,255)");
     }
 
     function createChart(canvasId, labels, data, label, color) {
@@ -354,21 +355,24 @@
         type: "line",
         data: {
           labels: labels,
-          datasets: [
-            {
-              label: label,
-              data: data,
-              borderColor: color,
-              fill: false,
-              tension: 0.3,
-            },
-          ],
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: color,
+            fill: false,
+            tension: 0.3,
+          }],
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: {
               title: { display: true, text: "Time (hh:mm:ss)" },
+              ticks: {
+                autoSkip: true,
+                maxTicksLimit: 10,
+              },
             },
             y: {
               title: { display: true, text: label },
@@ -379,11 +383,17 @@
       });
     }
 
-    function changeDate(dayOffset) {
+    function showTab(id) {
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
+      document.getElementById(`content-${id}`)?.classList.add("active");
+    }
+
+    function changeDate(offset) {
       const currentDate = new Date(document.getElementById("dateInput").value);
-      currentDate.setDate(currentDate.getDate() + dayOffset);
-      document.getElementById("dateInput").value = formatDateISO(currentDate);
-      loadData();
+      currentDate.setDate(currentDate.getDate() + offset); 
+      document.getElementById("dateInput").valueAsDate = currentDate; 
+      loadData(); 
     }
 
     loadData();
