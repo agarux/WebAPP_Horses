@@ -148,15 +148,8 @@
         const oxys = data.map(e => e.spo2);
         const bpms = data.map(e => e.bpm || e.heartRate);
 
-        const acc = data
-          .map(e => ({
-            time: new Date(e.timestamp).toLocaleTimeString(),
-            x: e.accelerationX,
-            y: e.accelerationY,
-            z: e.accelerationZ
-          }))
-          .filter(e => e.x !== undefined && e.y !== undefined && e.z !== undefined);
-
+        const state = data.map(e => e.movementType);
+        const magnitude = data.map(e => e.accelerationMagnitude);
         const gps = data
           .map(e => ({
             time: new Date(e.timestamp).toLocaleTimeString(),
@@ -165,22 +158,46 @@
           }))
           .filter(e => e.lat !== undefined && e.lon !== undefined);
 
+        // Tabla de movimiento (solo si hay datos válidos)
+        const movementRows = data.map((e, i) => {
+          const time = new Date(e.timestamp).toLocaleTimeString();
+          const mag = magnitude[i];
+          const mov = state[i];
+          if (mag !== undefined && mag !== null && mov && mov !== "N/A") {
+            return `<tr><td>${time}</td><td>${mag.toFixed(2)}</td><td>${mov}</td></tr>`;
+          }
+          return null;
+        }).filter(row => row !== null);
+
+        const movementTable = movementRows.length > 0 ? `
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Time</th><th>Acc. Magnitude</th><th>Movement Type</th></tr>
+              </thead>
+              <tbody>${movementRows.join("")}</tbody>
+            </table>
+          </div>
+        ` : "";
+
+        // Tabla GPS (opcional)
+        const gpsTable = gps.length > 0 ? `
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Time</th><th>Latitude</th><th>Longitude</th></tr></thead>
+              <tbody>${gps.map(e => `<tr><td>${e.time}</td><td>${e.lat}</td><td>${e.lon}</td></tr>`).join("")}</tbody>
+            </table>
+          </div>
+        ` : "";
+
+        // Contenido final
         div.innerHTML = `
           <h3>Horse ID ${id}</h3>
           <div class="scroll-wrapper"><canvas id="tempChart-${id}" height="100"></canvas></div>
           <div class="scroll-wrapper"><canvas id="oxyChart-${id}" height="100"></canvas></div>
           <div class="scroll-wrapper"><canvas id="bpmChart-${id}" height="100"></canvas></div>
-          <div class="table-wrapper">
-            <table><thead><tr><th>Time</th><th>Acc X</th><th>Acc Y</th><th>Acc Z</th></tr></thead><tbody>
-            ${acc.map(e => `<tr><td>${e.time}</td><td>${e.x}</td><td>${e.y}</td><td>${e.z}</td></tr>`).join("")}
-            </tbody></table>
-          </div>
-          ${gps.length > 0 ? `
-          <div class="table-wrapper">
-            <table><thead><tr><th>Time</th><th>Latitude</th><th>Longitude</th></tr></thead><tbody>
-            ${gps.map(e => `<tr><td>${e.time}</td><td>${e.lat}</td><td>${e.lon}</td></tr>`).join("")}
-            </tbody></table>
-          </div>` : ""}
+          ${movementTable}
+          ${gpsTable}
         `;
 
         horseContents.appendChild(div);
@@ -191,7 +208,6 @@
         if (index === 0) showTab(id);
       });
     }
-
 
     function renderStable(stables) {
       horseTabs.innerHTML = "";
@@ -218,22 +234,51 @@
     }
 
     function createChart(canvasId, labels, data, label, color) {
+      const filteredData = data.filter(v => v !== null && v !== undefined && !isNaN(v));
+      const min = Math.min(...filteredData);
+      const max = Math.max(...filteredData);
+      const range = max - min;
+      const padding = range * 0.1 || 1; 
+
       new Chart(document.getElementById(canvasId), {
         type: "line",
         data: {
           labels: labels,
-          datasets: [{ label: label, data: data, borderColor: color, fill: false, tension: 0.3 }],
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: color,
+            fill: false,
+            tension: 0.3
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { title: { display: true, text: "Time (hh:mm:ss)" }, ticks: { autoSkip: true, maxTicksLimit: 10 } },
-            y: { title: { display: true, text: label }, beginAtZero: true },
-          },
-        },
+            x: {
+              title: {
+                display: true,
+                text: "Time (hh:mm:ss)"
+              },
+              ticks: {
+                autoSkip: true,
+                maxTicksLimit: 10
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: label
+              },
+              min: min - padding,
+              max: max + padding
+            }
+          }
+        }
       });
     }
+
 
     function showTab(id) {
       document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
