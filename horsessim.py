@@ -3,11 +3,9 @@ import random
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 
-# Tu cadena de conexión del dispositivo (puedes obtenerla con Azure CLI)
-CONNECTION_STRING = "HostName=iot-hub-horses.azure-devices.net;DeviceId=horses-data-device;SharedAccessKey=9ewnQebJX0XIW4Y2HzZxvOlhn6eXTydV0PZ9CUQv3Aw="
+CONNECTION_STRING = "HostName=IoTHubFP.azure-devices.net;DeviceId=horses-test;SharedAccessKey=dENTqCnIEzl2Uio3ZBWrGmXyoxWdROaBudC/DqUMJ6k="
 
-# Intervalo de telemetría en segundos (por defecto 1 segundo)
-telemetry_interval = 5
+telemetry_interval = 10
 
 # Cliente IoT Hub
 device_client = None
@@ -34,13 +32,11 @@ def send_device_to_cloud_messages():
     
     while True:
         # Generar valores aleatorios para la simulación
-        horse_id = random.randint(1, 3)
+        horse_id = random.randint(1, 5)
         temperature = min_temp + random.uniform(0, 15)
         oxymetry = min_oxymetry + random.uniform(0, 5)
-        bpm = min_bpm + random.randint(50, 100)  # BPM entre 50 y 100
-        status = random.choice(["standing", "lying down"])  # Estado aleatorio
-        location = random.choice(["inside", "outside"])  # Ubicación aleatoria
-
+        bpm = min_bpm + random.randint(50, 100) 
+        status = random.choice(["Standing", "Walking", "Trotting", "Running"])  
         # Crear el mensaje JSON
         message_data = {
             "horse_id": horse_id,
@@ -48,7 +44,6 @@ def send_device_to_cloud_messages():
             "oxymetry": oxymetry,
             "bpm": bpm,
             "status": status,
-            "location": location
         }
         message_string = json.dumps(message_data)
 
