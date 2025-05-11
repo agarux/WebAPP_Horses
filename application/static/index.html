@@ -240,7 +240,9 @@
       fetch(`/all_data?timestamp=${date}`)
         .then(res => res.json())
         .then(data => {
-          if (!data.length) {
+          console.log("[DEBUG] Data received from backend:", data);
+
+          if (!data || Object.keys(data).length === 0) {
             alert("No data available.");
             return;
           }
@@ -248,26 +250,27 @@
           const horses = {};
           const stables = [];
 
-          data.forEach(entry => {
-            if (entry.horse_id) {
-              const id = entry.horse_id;
-              if (!horses[id]) horses[id] = [];
-              horses[id].push(entry);
-            } else if (entry.device === "stable") {
-              stables.push(entry);
+          // Procesa los datos de caballos y establos
+          for (const [key, entries] of Object.entries(data)) {
+            if (key === "stable") {
+              stables.push(...entries);
+            } else {
+              horses[key] = entries;
             }
-          });
+          }
 
+          // Dependiendo de la sección, renderiza los datos
           if (currentSection === "horses") {
             renderHorses(horses);
           } else {
-            renderStable(stables);
+            renderStable(stables); // Muestra los datos del establo
           }
         })
         .catch(err => {
           console.error("Error loading data:", err);
         });
     }
+
 
     function renderHorses(horses) {
       horseTabs.innerHTML = "";
@@ -320,21 +323,22 @@
       });
     }
 
-    function renderStable(data) {
+    function renderStable(stables) {
       horseTabs.innerHTML = "";
       horseContents.innerHTML = "";
 
       const container = document.createElement("div");
       container.className = "tab-content active";
 
-      const labels = data.map(e => {  
+      // Asumiendo que los datos del establo tienen los campos "timestamp", "temperature", "humidity", "pressure"
+      const labels = stables.map(e => {  
         const d = new Date(e.timestamp);
         return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
       });
 
-      const temps = data.map(e => e.temperature || 0);
-      const hums = data.map(e => e.humidity || 0);
-      const pressures = data.map(e => e.pressure || 0);
+      const temps = stables.map(e => e.temperature || 0);
+      const hums = stables.map(e => e.humidity || 0);
+      const pressures = stables.map(e => e.pressure || 0);
 
       container.innerHTML = `
         <h3>Stable - Temperature, Humidity, and Pressure</h3>
@@ -349,6 +353,7 @@
       createChart("stableHumidityChart", labels, hums, "Humidity (%)", "rgb(0,0,255)");
       createChart("stablePressureChart", labels, pressures, "Pressure (hPa)", "rgb(0,128,255)");
     }
+
 
     function createChart(canvasId, labels, data, label, color) {
       new Chart(document.getElementById(canvasId), {
