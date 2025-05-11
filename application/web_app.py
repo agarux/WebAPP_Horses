@@ -33,17 +33,13 @@ def get_all_data():
     print(f"[INFO] Total de blobs encontrados con prefix '{prefix}': {len(blobs)}")
 
     horses_data = {}
+    stable_data = []
 
     for blob in blobs:
-        print(f"[DEBUG] Revisando blob: {blob.name}")
-
         if f"/{year}/{month}/{day}/" not in blob.name:
-            print(f"[SKIP] Blob fuera de la fecha: {blob.name}")
             continue
 
-        print(f"[MATCH] Blob válido para la fecha: {blob.name}")
         blob_client = container_client.get_blob_client(blob.name)
-
         try:
             blob_data = blob_client.download_blob().readall().decode("utf-8")
         except Exception as e:
@@ -51,56 +47,49 @@ def get_all_data():
             continue
 
         for line in blob_data.strip().splitlines():
-            print(f"[DEBUG] Línea en blob: {line[:100]}...")
-
             try:
                 record = json.loads(line)
             except Exception as e:
-                print(f"[ERROR] JSON inválido en línea: {e}")
+                print(f"[ERROR] JSON inválido: {e}")
                 continue
 
             system_props = record.get("SystemProperties", {})
             timestamp = system_props.get("enqueuedTime")
             device_id = system_props.get("connectionDeviceId", "").lower()
-            print(f"[INFO] Dispositivo: {device_id}, Timestamp: {timestamp}")
-
             body_raw = record.get("Body")
-            if not body_raw:
-                print("[WARN] No hay campo 'Body'")
+
+            if not body_raw or not device_id:
                 continue
 
             if "horse" in device_id:
                 if isinstance(body_raw, str):
                     try:
                         body_json = json.loads(body_raw)
-                    except json.JSONDecodeError as e:
-                        print(f"[ERROR] No se pudo decodificar string JSON: {e}")
+                    except json.JSONDecodeError:
                         continue
                 else:
                     body_json = body_raw
 
                 horse_id = device_id.replace("edgedevicehorse", "").strip()
-                print(f"[INFO] horse_id: {horse_id}")
                 body_json["horse_id"] = horse_id
                 body_json["timestamp"] = timestamp
 
                 if horse_id not in horses_data:
                     horses_data[horse_id] = []
                 horses_data[horse_id].append(body_json)
-                print(f"[OK] Añadido dato para horse_id {horse_id}")
 
             elif "stable" in device_id:
-                print("[INFO] Dispositivo de establo, ignorado")
-                continue
+                try:
+                    decoded = base64.b64decode(body_raw).decode("utf-8")
+                    body_json = json.loads(decoded)
+                except Exception as e:
+                    print(f"[ERROR] Error decodificando base64 de establo: {e}")
+                    continue
 
-            else:
-                print(f"[INFO] Dispositivo desconocido: {device_id}")
-                continue
+                body_json["timestamp"] = timestamp
+                stable_data.append(body_json)
 
-    print(f"[FINAL] Total de caballos encontrados: {len(horses_data)}")
-    return jsonify(horses_data)
-
-
+    return jsonify({**horses_data, "stable": stable_data})
 
 @app.route('/static/<path:path>')
 def send_static(path):

@@ -6,177 +6,37 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" type="image/svg+xml" href="static/favicon.ico" />
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
-
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 220px;
-      background-color: #0d7b61;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: fixed;
-      height: 100vh;
-    }
-
-    .sidebar img {
-      max-height: 100px;
-      margin: 20px auto;
-      display: block;
-    }
-
-    .sidebar nav {
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-    }
-
-    .sidebar button {
-      background: none;
-      border: none;
-      color: white;
-      padding: 12px;
-      text-align: left;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .sidebar button:hover,
-    .sidebar button.active {
-      background-color: #189273;
-    }
-
-    .sidebar footer {
-      text-align: center;
-      padding: 10px;
-      font-size: 14px;
-    }
-
-    .main {
-      margin-left: 240px;
-      flex-grow: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .tabs {
-      margin: 20px 0;
-    }
-
-    .tab-button {
-      padding: 10px;
-      margin: 5px;
-      background-color: #0d7b61;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    .tab-button.active {
-      background-color: #189273;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .scroll-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
-      width: 100%;
-    }
-
-    .scroll-wrapper canvas {
-      width: 1200px;
-      height: 300px;
-    }
-
-    .table-wrapper {
-      max-height: 300px;
-      overflow-y: auto;
-      background: white;
-      border: 1px solid #ccc;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-
-    th, td {
-      padding: 8px;
-      border: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #0d7b61;
-      color: white;
-    }
-
-    .date-selector {
-      margin-bottom: 20px;
-    }
-
-    .date-selector button {
-      background-color: #0d7b61;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 25px;
-    }
-
-    .date-selector button:hover {
-      background-color: #189273;
-    }
-
-    .nav-buttons {
-      margin: 20px 0;
-    }
-
-    .nav-buttons button {
-      background-color: #0d7b61;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 25px;
-    }
-
-    .nav-buttons button:hover {
-      background-color: #189273;
-    }
-
-    .scroll-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
-      width: 100%;
-      padding-bottom: 20px; 
-    }
-
-    canvas {
-      width: 100% !important;  
-      height: 300px;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; height: 100vh; }
+    .sidebar { width: 220px; background-color: #0d7b61; color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; }
+    .sidebar img { max-height: 100px; margin: 20px auto; display: block; }
+    .sidebar nav { display: flex; flex-direction: column; padding: 10px; }
+    .sidebar button { background: none; border: none; color: white; padding: 12px; text-align: left; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+    .sidebar button:hover, .sidebar button.active { background-color: #189273; }
+    .sidebar footer { text-align: center; padding: 10px; font-size: 14px; }
+    .main { margin-left: 240px; flex-grow: 1; padding: 20px; overflow-y: auto; }
+    .tabs { margin: 20px 0; }
+    .tab-button { padding: 10px; margin: 5px; background-color: #0d7b61; color: white; border: none; cursor: pointer; }
+    .tab-button.active { background-color: #189273; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .scroll-wrapper { overflow-x: auto; overflow-y: hidden; width: 100%; padding-bottom: 20px; }
+    .scroll-wrapper canvas { width: 100% !important; height: 300px; }
+    .table-wrapper { max-height: 150px; overflow-y: auto; background: white; border: 1px solid #ccc; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 8px; border: 1px solid #ddd; }
+    th { background-color: #0d7b61; color: white; }
+    .date-selector { margin-bottom: 20px; }
+    .date-selector button { background-color: #0d7b61; color: white; padding: 10px 20px; border: none; cursor: pointer; font-size: 16px; border-radius: 25px; }
+    .date-selector button:hover { background-color: #189273; }
+    .nav-buttons { margin: 20px 0; }
+    .nav-buttons button { background-color: #0d7b61; color: white; padding: 10px 20px; border: none; cursor: pointer; font-size: 16px; border-radius: 25px; }
+    .nav-buttons button:hover { background-color: #189273; }
+    #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.8); display: flex; justify-content: center; align-items: center; font-size: 24px; z-index: 9999; display: none; }
   </style>
 </head>
 <body>
+  <div id="loadingOverlay">Loading...</div>
   <div class="sidebar">
     <div>
       <img src="static/logo.png" alt="Logo" />
@@ -190,18 +50,15 @@
 
   <div class="main">
     <h2 id="sectionTitle">Horse Monitoring Dashboard</h2>
-
     <div class="date-selector">
       <label for="dateInput">Select a date:</label>
       <input type="date" id="dateInput" />
       <button onclick="loadData()">Load Data</button>
     </div>
-
     <div class="nav-buttons">
       <button onclick="changeDate(-1)">Previous Day</button>
       <button onclick="changeDate(1)">Next Day</button>
     </div>
-
     <div class="tabs" id="horseTabs"></div>
     <div id="horseContents"></div>
   </div>
@@ -210,6 +67,7 @@
     let currentSection = "horses";
     const horseTabs = document.getElementById("horseTabs");
     const horseContents = document.getElementById("horseContents");
+    const loadingOverlay = document.getElementById("loadingOverlay");
 
     document.getElementById("dateInput").valueAsDate = new Date();
 
@@ -218,10 +76,8 @@
       document.getElementById("btnHorses").classList.remove("active");
       document.getElementById("btnStable").classList.remove("active");
       document.getElementById(`btn${capitalize(section)}`).classList.add("active");
-
       document.getElementById("sectionTitle").innerText =
         section === "horses" ? "Horse Monitoring Dashboard" : "Stable - Environmental parameters";
-
       loadData();
     }
 
@@ -236,12 +92,12 @@
     function loadData() {
       const date = document.getElementById("dateInput").value;
       if (!date) return;
+      loadingOverlay.style.display = "flex";
 
       fetch(`/all_data?timestamp=${date}`)
         .then(res => res.json())
         .then(data => {
-          console.log("[DEBUG] Data received from backend:", data);
-
+          loadingOverlay.style.display = "none";
           if (!data || Object.keys(data).length === 0) {
             alert("No data available.");
             return;
@@ -250,7 +106,6 @@
           const horses = {};
           const stables = [];
 
-          // Procesa los datos de caballos y establos
           for (const [key, entries] of Object.entries(data)) {
             if (key === "stable") {
               stables.push(...entries);
@@ -259,24 +114,24 @@
             }
           }
 
-          // Dependiendo de la sección, renderiza los datos
           if (currentSection === "horses") {
             renderHorses(horses);
           } else {
-            renderStable(stables); // Muestra los datos del establo
+            renderStable(stables);
           }
         })
         .catch(err => {
+          loadingOverlay.style.display = "none";
           console.error("Error loading data:", err);
         });
     }
 
-
     function renderHorses(horses) {
       horseTabs.innerHTML = "";
       horseContents.innerHTML = "";
-
       Object.keys(horses).forEach((id, index) => {
+        if (!horses[id] || horses[id].length === 0) return;
+
         const button = document.createElement("button");
         button.className = "tab-button";
         button.innerText = `Horse ${id}`;
@@ -287,58 +142,67 @@
         div.className = "tab-content";
         div.id = `content-${id}`;
 
-        const labels = horses[id].map(e => {  
-          const d = new Date(e.timestamp);
-          return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(d.getMilliseconds()).padStart(3, "0")}`;
-        });
+        const data = horses[id];
+        const labels = data.map(e => new Date(e.timestamp).toLocaleTimeString());
+        const temps = data.map(e => e.temperature);
+        const oxys = data.map(e => e.spo2);
+        const bpms = data.map(e => e.bpm || e.heartRate);
 
-        const temps = horses[id].map(e => e.temperature);
-        const oxys = horses[id].map(e => e.oxymetry);
-        const bpms = horses[id].map(e => e.bpm || e.heartRate);
-        const accX = horses[id].map(e => e.accelerationX || 0);
-        const accY = horses[id].map(e => e.accelerationY || 0);
-        const accZ = horses[id].map(e => e.accelerationZ || 0);
+        const acc = data
+          .map(e => ({
+            time: new Date(e.timestamp).toLocaleTimeString(),
+            x: e.accelerationX,
+            y: e.accelerationY,
+            z: e.accelerationZ
+          }))
+          .filter(e => e.x !== undefined && e.y !== undefined && e.z !== undefined);
+
+        const gps = data
+          .map(e => ({
+            time: new Date(e.timestamp).toLocaleTimeString(),
+            lat: e.latitude,
+            lon: e.longitude
+          }))
+          .filter(e => e.lat !== undefined && e.lon !== undefined);
 
         div.innerHTML = `
           <h3>Horse ID ${id}</h3>
-
           <div class="scroll-wrapper"><canvas id="tempChart-${id}" height="100"></canvas></div>
           <div class="scroll-wrapper"><canvas id="oxyChart-${id}" height="100"></canvas></div>
           <div class="scroll-wrapper"><canvas id="bpmChart-${id}" height="100"></canvas></div>
-          <div class="scroll-wrapper"><canvas id="accXChart-${id}" height="100"></canvas></div>
-          <div class="scroll-wrapper"><canvas id="accYChart-${id}" height="100"></canvas></div>
-          <div class="scroll-wrapper"><canvas id="accZChart-${id}" height="100"></canvas></div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Time</th><th>Acc X</th><th>Acc Y</th><th>Acc Z</th></tr></thead><tbody>
+            ${acc.map(e => `<tr><td>${e.time}</td><td>${e.x}</td><td>${e.y}</td><td>${e.z}</td></tr>`).join("")}
+            </tbody></table>
+          </div>
+          ${gps.length > 0 ? `
+          <div class="table-wrapper">
+            <table><thead><tr><th>Time</th><th>Latitude</th><th>Longitude</th></tr></thead><tbody>
+            ${gps.map(e => `<tr><td>${e.time}</td><td>${e.lat}</td><td>${e.lon}</td></tr>`).join("")}
+            </tbody></table>
+          </div>` : ""}
         `;
 
         horseContents.appendChild(div);
-
         createChart(`tempChart-${id}`, labels, temps, "Temperature (°C)", "rgb(255,0,0)");
         createChart(`oxyChart-${id}`, labels, oxys, "Oxygenation (%)", "rgb(0,0,235)");
         createChart(`bpmChart-${id}`, labels, bpms, "BPM", "rgb(0,255,0)");
-        createChart(`accXChart-${id}`, labels, accX, "Acceleration X (g)", "rgb(255,128,0)");
-        createChart(`accYChart-${id}`, labels, accY, "Acceleration Y (g)", "rgb(0,128,255)");
-        createChart(`accZChart-${id}`, labels, accZ, "Acceleration Z (g)", "rgb(128,0,255)");
 
         if (index === 0) showTab(id);
       });
     }
 
+
     function renderStable(stables) {
       horseTabs.innerHTML = "";
       horseContents.innerHTML = "";
-
       const container = document.createElement("div");
       container.className = "tab-content active";
 
-      // Asumiendo que los datos del establo tienen los campos "timestamp", "temperature", "humidity", "pressure"
-      const labels = stables.map(e => {  
-        const d = new Date(e.timestamp);
-        return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
-      });
-
-      const temps = stables.map(e => e.temperature || 0);
-      const hums = stables.map(e => e.humidity || 0);
-      const pressures = stables.map(e => e.pressure || 0);
+      const labels = stables.map(e => new Date(e.timestamp).toLocaleTimeString());
+      const temps = stables.map(e => e.temperature);
+      const hums = stables.map(e => e.humidity);
+      const pressures = stables.map(e => e.pressure);
 
       container.innerHTML = `
         <h3>Stable - Temperature, Humidity, and Pressure</h3>
@@ -348,41 +212,24 @@
       `;
 
       horseContents.appendChild(container);
-
       createChart("stableTempChart", labels, temps, "Temperature (°C)", "rgb(255,0,0)");
       createChart("stableHumidityChart", labels, hums, "Humidity (%)", "rgb(0,0,255)");
       createChart("stablePressureChart", labels, pressures, "Pressure (hPa)", "rgb(0,128,255)");
     }
-
 
     function createChart(canvasId, labels, data, label, color) {
       new Chart(document.getElementById(canvasId), {
         type: "line",
         data: {
           labels: labels,
-          datasets: [{
-            label: label,
-            data: data,
-            borderColor: color,
-            fill: false,
-            tension: 0.3,
-          }],
+          datasets: [{ label: label, data: data, borderColor: color, fill: false, tension: 0.3 }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: {
-              title: { display: true, text: "Time (hh:mm:ss)" },
-              ticks: {
-                autoSkip: true,
-                maxTicksLimit: 10,
-              },
-            },
-            y: {
-              title: { display: true, text: label },
-              beginAtZero: true,
-            },
+            x: { title: { display: true, text: "Time (hh:mm:ss)" }, ticks: { autoSkip: true, maxTicksLimit: 10 } },
+            y: { title: { display: true, text: label }, beginAtZero: true },
           },
         },
       });
@@ -396,9 +243,9 @@
 
     function changeDate(offset) {
       const currentDate = new Date(document.getElementById("dateInput").value);
-      currentDate.setDate(currentDate.getDate() + offset); 
-      document.getElementById("dateInput").valueAsDate = currentDate; 
-      loadData(); 
+      currentDate.setDate(currentDate.getDate() + offset);
+      document.getElementById("dateInput").valueAsDate = currentDate;
+      loadData();
     }
 
     loadData();
